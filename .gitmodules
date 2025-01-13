@@ -1,0 +1,3 @@
+[submodule "ginkgo"]
+	path = ginkgo
+	url = https://github.com/ginkgo-project/ginkgo.git
