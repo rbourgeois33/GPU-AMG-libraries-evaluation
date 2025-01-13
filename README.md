@@ -35,6 +35,7 @@ make -j 48 install
 ```bash
 mkdir build
 cd build
+cmake ..
 make -j 12
 ```
 
