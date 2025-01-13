@@ -27,7 +27,6 @@ int main(int argc, char* argv[])
     std::cout <<"\n"<< gko::version_info::get() << std::endl;
 
     const auto executor_string = argc >= 2 ? argv[1] : "reference";
-    const double rtol = argc >= 3 ? std::stod(argv[2]) : 5e-4;
 
     // Figure out where to run the code
     std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
@@ -55,7 +54,6 @@ int main(int argc, char* argv[])
     // Query the device properties
     std::cout<<"\nBACKEND SELECTED: "<< executor_string <<"\n";
     std::cout<<"Executor: "<< exec->get_description() <<"\n";
-    std::cout<<"rtol= "<< rtol <<"\n";
  
     // Read matrix and rhs
     //auto A = share(gko::read<mtx>(std::ifstream("data/aij_51840.mtx"), exec));
@@ -95,7 +93,7 @@ int main(int argc, char* argv[])
             .with_mg_level(pgm::build().with_deterministic(true))
             .with_criteria(gko::stop::Iteration::build().with_max_iters(1u))
             .on(exec);
-    const gko::remove_complex<_TYPE_> tolerance = rtol;
+    const gko::remove_complex<_TYPE_> tolerance = 5e-4;
     auto solver_gen =
         cg::build()
             .with_criteria(gko::stop::Iteration::build().with_max_iters(100u),
