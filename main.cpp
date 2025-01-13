@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 #include <ginkgo/ginkgo.hpp>
-
+#include <mynvtx.h>
 
 int main(int argc, char* argv[])
 {
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     // Read matrix and rhs
     std::cout<<"\nReading matrix ...\n";
     auto A = share(gko::read<mtx>(std::ifstream("../data/aij_2592000.mtx"), exec));
-    std::cout<<"OK! Reading rhs ...\n";
+    std::cout<<"Reading rhs ...\n";
     auto b = share(gko::read<vec>(std::ifstream("../data/rhs_2592000.mtx"), exec));
 
     std::cout<<"\nCreate null initial guess x and loading onto device ...\n";
@@ -124,8 +124,10 @@ int main(int argc, char* argv[])
     exec->synchronize();
     std::chrono::nanoseconds time(0);
     auto tic = std::chrono::steady_clock::now();
+    mynvtxRangePush("Solving");
     solver->apply(b, x);
     exec->synchronize();
+    mynvtxRangePop("Solving");
     auto toc = std::chrono::steady_clock::now();
     time += std::chrono::duration_cast<std::chrono::nanoseconds>(toc - tic);
     std::cout<<"OK! results:\n\n";
