@@ -3,4 +3,4 @@
 	url = https://github.com/ginkgo-project/ginkgo.git
 [submodule "mynvtx"]
 	path = mynvtx
-	url = https://gitlab.com/rbourgeois1/mynvtx
+	url = https://github.com/rbourgeois33/mynvtx
