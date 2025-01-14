@@ -1,7 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
-//
-// SPDX-License-Identifier: BSD-3-Clause
-// This file is heavily inspired (if not entirely copied from) the ginkgo's project examples:
+// This file is heavily inspired  the ginkgo's project examples:
 /* https://github.com/ginkgo-project/ginkgo/tree/develop/examples */
 
 #include <fstream>
@@ -24,88 +21,40 @@ using jacobi_preconditioner = gko::preconditioner::Jacobi<_TYPE_, _STYPE_>;
 using incomplete_cholesky_preconditioner = gko::preconditioner::Ic<gko::solver::LowerTrs<_TYPE_>>;
 using incomplete_cholesky_factorisation = gko::factorization::Ic<_TYPE_, _STYPE_>;
 
-int main(int argc, char *argv[])
+//Useful struct
+struct ResolutionParams
 {
-    // Resolution parameters
-    auto max_block_size_jacobi = 4u;
-    bool use_storage_optim_jacobi = true;
-    auto n_smooth = 2u;
-    _TYPE_ relax_smooth = 0.9;
-    bool pgm_deterministic = true;
-    auto max_levels = 5u;
-    auto n_v_cycles = 1u;
+    // Jacobi parameters
+    int max_block_size_jacobi;
+    bool use_storage_optim_jacobi;
 
-    // ---- Read user input and select device ----
+    // Smoother parameters
+    int n_smooth;
+    double relax_smooth;
 
-    // Print version information
-    std::cout << "\n" << gko::version_info::get() << std::endl;
+    // PGM parameters
+    bool pgm_deterministic;
 
-    const auto executor_string = argc >= 2 ? argv[1] : "reference";
+    // Multi-level cycle parameters
+    int max_levels;
+    int n_v_cycles;
+};
 
-    // Figure out where to run the code
-    std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
-        exec_map{
-            {"omp", []
-             { return gko::OmpExecutor::create(); }},
-            {"cuda",
-             []
-             {
-                 return gko::CudaExecutor::create(0,
-                                                  gko::OmpExecutor::create());
-             }},
-            {"hip",
-             []
-             {
-                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
-             }},
-            {"dpcpp",
-             []
-             {
-                 return gko::DpcppExecutor::create(
-                     0, gko::ReferenceExecutor::create());
-             }},
-            {"reference", []
-             { return gko::ReferenceExecutor::create(); }}};
 
-    // executor where Ginkgo will perform the computation (device ?)
-    const auto exec = exec_map.at(executor_string)(); // throws if not valid
-    // Query the device properties
-    std::cout << "\nBACKEND SELECTED: " << executor_string << "\n";
-    std::cout << "Executor: " << exec->get_description() << "\n";
-
-    // ---- Read matrix and evaluate initial error----
-
-    // Read matrix and rhs
-    // auto A = share(gko::read<mtx>(std::ifstream("data/aij_51840.mtx"), exec));
-    // auto b = share(gko::read<vec>(std::ifstream("data/rhs_51840.mtx"), exec));
-
-    // Read matrix and rhs
-    std::cout << "\nReading matrix ...\n";
-    auto A = share(gko::read<mtx>(std::ifstream("../data/aij_2592000.mtx"), exec));
-    std::cout << "Reading rhs ...\n";
-    auto b = share(gko::read<vec>(std::ifstream("../data/rhs_2592000.mtx"), exec));
-
-    std::cout << "\nCreate null initial guess x and loading onto device ...\n";
-    
-    // Create initial guess as 0
-    gko::size_type size = A->get_size()[0];
-    auto host_x = vec::create(exec->get_master(), gko::dim<2>(size, 1));
-    for (auto i = 0; i < size; i++)
-    {
-        host_x->at(i, 0) = 0.;
-    }
-    auto x = vec::create(exec);
-    // Send to device
-    x->copy_from(host_x);
-
-    std::cout << "Evaluating initial residual...\n";
-    // Calculate initial residual
-    auto r = share(gko::read<vec>(std::ifstream("../data/rhs_2592000.mtx"), exec));
-    auto one = gko::initialize<vec>({1.0}, exec);
-    auto neg_one = gko::initialize<vec>({-1.0}, exec);
-    auto initres = gko::initialize<vec>({0.0}, exec);
-    A->apply(one, x, neg_one, r); // r=Ax-r (with r=b)
-    r->compute_norm2(initres);
+using A_t = std::shared_ptr<mtx>;
+using b_t = std::shared_ptr<vec>;
+using x_t = std::unique_ptr<vec>;
+using exec_t = std::shared_ptr<gko::Executor>;
+void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &x, const ResolutionParams &params)
+{
+    // Unpack into local variables:
+    auto max_block_size_jacobi = params.max_block_size_jacobi;
+    auto use_storage_optim_jacobi = params.use_storage_optim_jacobi;
+    auto n_smooth = params.n_smooth;
+    auto relax_smooth = params.relax_smooth;
+    auto pgm_deterministic = params.pgm_deterministic;
+    auto max_levels = params.max_levels;
+    auto n_v_cycles = params.n_v_cycles;
 
     // ---- Prepare the stopping criteria ----
 
@@ -158,8 +107,8 @@ int main(int argc, char *argv[])
 
     // Next we select a CG solver for the coarsest level. Again, since the input
     // matrix is known to be spd, and the Pgm restriction preserves this
-    // characteristic, we can safely choose the CG. We reuse the Ic factory here
-    // to generate an Ic preconditioner. It is important to solve until machine
+    // characteristic, we can safely choose the CG. We reuse the jacobi factory here
+    // to generate an jacobi preconditioner. It is important to solve until machine
     // precision here to get a good convergence rate.
     auto coarsest_gen = gko::share(conjugate_gradient::build()
                                        .with_preconditioner(preconditioner)
@@ -194,6 +143,7 @@ int main(int argc, char *argv[])
                           .on(exec);
 
     std::cout << "Creating solver ...\n";
+
     // Create solver
     std::chrono::nanoseconds gen_time(0);
     auto gen_tic = std::chrono::steady_clock::now();
@@ -218,9 +168,6 @@ int main(int argc, char *argv[])
 
     // Calculate residual
     auto res = gko::as<vec>(logger->get_residual_norm());
-
-    std::cout << "Initial residual norm sqrt(r^T r): \n";
-    write(std::cout, initres);
     std::cout << "Final residual norm sqrt(r^T r): \n";
     write(std::cout, res);
 
@@ -235,4 +182,97 @@ int main(int argc, char *argv[])
               << static_cast<double>(time.count()) / 1e6 /
                      logger->get_num_iterations()
               << std::endl;
+
+    return;
+}
+
+int main(int argc, char *argv[])
+{
+    // Resolution parameters
+    ResolutionParams params{
+        4u,   // max_block_size_jacobi
+        true, // use_storage_optim_jacobi
+        2u,   // n_smooth
+        0.9,  // relax_smooth
+        true, // pgm_deterministic
+        5u,   // max_levels
+        1u    // n_v_cycles
+    };
+
+    // ---- Read user input and select device ----
+
+    // Print version information
+    std::cout << "\n"
+              << gko::version_info::get() << std::endl;
+
+    const auto executor_string = argc >= 2 ? argv[1] : "reference";
+
+    // Figure out where to run the code
+    std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
+        exec_map{
+            {"omp", []
+             { return gko::OmpExecutor::create(); }},
+            {"cuda",
+             []
+             {
+                 return gko::CudaExecutor::create(0,
+                                                  gko::OmpExecutor::create());
+             }},
+            {"hip",
+             []
+             {
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
+             }},
+            {"dpcpp",
+             []
+             {
+                 return gko::DpcppExecutor::create(
+                     0, gko::ReferenceExecutor::create());
+             }},
+            {"reference", []
+             { return gko::ReferenceExecutor::create(); }}};
+
+    // executor where Ginkgo will perform the computation (device ?)
+    const auto exec = exec_map.at(executor_string)(); // throws if not valid
+    // Query the device properties
+    std::cout << "\nBACKEND SELECTED: " << executor_string << "\n";
+    std::cout << "Executor: " << exec->get_description() << "\n";
+
+    // ---- Read matrix and evaluate initial error----
+
+    // Read matrix and rhs
+    // auto A = share(gko::read<mtx>(std::ifstream("data/aij_51840.mtx"), exec));
+    // auto b = share(gko::read<vec>(std::ifstream("data/rhs_51840.mtx"), exec));
+
+    // Read matrix and rhs
+    std::cout << "\nReading matrix ...\n";
+    auto A = share(gko::read<mtx>(std::ifstream("../data/aij_2592000.mtx"), exec));
+    std::cout << "Reading rhs ...\n";
+    auto b = share(gko::read<vec>(std::ifstream("../data/rhs_2592000.mtx"), exec));
+
+    std::cout << "\nCreate null initial guess x and loading onto device ...\n";
+
+    // Create initial guess as 0
+    gko::size_type size = A->get_size()[0];
+    auto host_x = vec::create(exec->get_master(), gko::dim<2>(size, 1));
+    for (auto i = 0; i < size; i++)
+    {
+        host_x->at(i, 0) = 0.;
+    }
+    auto x = vec::create(exec);
+    // Send to device
+    x->copy_from(host_x);
+
+    std::cout << "Evaluating initial residual...\n";
+    // Calculate initial residual
+    auto r = share(gko::read<vec>(std::ifstream("../data/rhs_2592000.mtx"), exec));
+    auto one = gko::initialize<vec>({1.0}, exec);
+    auto neg_one = gko::initialize<vec>({-1.0}, exec);
+    auto initres = gko::initialize<vec>({0.0}, exec);
+    A->apply(one, x, neg_one, r); // r=Ax-r (with r=b)
+    r->compute_norm2(initres);
+    std::cout << "Initial residual norm sqrt(r^T r): \n";
+    write(std::cout, initres);
+
+    evaluate_solver(exec, A, b, x, params);
 }
