@@ -12,12 +12,25 @@
 // Some shortcuts
 using _TYPE_ = double;
 using _STYPE_ = int;
+
 using vec = gko::matrix::Dense<_TYPE_>;
 using mtx = gko::matrix::Csr<_TYPE_, _STYPE_>;
-using conjugate_gradient = gko::solver::Cg<_TYPE_>;
+
+using conjugate_gradient = gko::solver::Cg<_TYPE_>; //14 iters
+using conjugate_gradient_square = gko::solver::Cgs<_TYPE_>; //7 iters
+using biconjugate_gradient = gko::solver::Bicg<_TYPE_>; //Does not support AMG precond
+using biconjugate_gradient_stabilized = gko::solver::Bicgstab<_TYPE_>; //7 iters
+using flexible_conjugate_gradient = gko::solver::Fcg<_TYPE_>; //14 iters
+using generalized_conjugate_residual =  gko::solver::Gcr<_TYPE_>; //13 iters
 using multigrid = gko::solver::Multigrid;
+
+using main_solver=conjugate_gradient;
+using coarse_solver=conjugate_gradient;
+
 using parallel_graph_matching = gko::multigrid::Pgm<_TYPE_, _STYPE_>;
+
 using jacobi_preconditioner = gko::preconditioner::Jacobi<_TYPE_, _STYPE_>;
+using gauss_seidel_preconditioner = gko::preconditioner::GaussSeidel<_TYPE_, _STYPE_>;
 using incomplete_cholesky_preconditioner = gko::preconditioner::Ic<gko::solver::LowerTrs<_TYPE_>>;
 using incomplete_cholesky_factorisation = gko::factorization::Ic<_TYPE_, _STYPE_>;
 
@@ -78,14 +91,18 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
 
     // ---- customize some settings of the multigrid preconditioner. ----
 
-    /*auto incomplete_cholesky_gen = gko::share(
+    auto incomplete_cholesky_gen = gko::share(
         incomplete_cholesky_preconditioner::build()
             .with_factorization(incomplete_cholesky_factorisation::build())
-            .on(exec));*/
+            .on(exec));
 
     auto jacobi_gen = gko::share(
         jacobi_preconditioner::build()
             .with_max_block_size(max_block_size_jacobi)
+            .on(exec));
+
+    auto gauss_seidel_gen = gko::share(
+        gauss_seidel_preconditioner::build()
             .on(exec));
 
     if (use_storage_optim_jacobi)
@@ -109,13 +126,12 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
     // characteristic, we can safely choose the CG. We reuse the jacobi factory here
     // to generate an jacobi preconditioner. It is important to solve until machine
     // precision here to get a good convergence rate.
-    auto coarsest_gen = gko::share(conjugate_gradient::build()
+    auto coarsest_gen = gko::share(coarse_solver::build()
                                        .with_preconditioner(preconditioner)
                                        .with_criteria(iter_stop, exact_tol_stop)
                                        .on(exec));
 
-    if (verbose)
-        std::cout << "Creating multigrid factory...\n";
+    if (verbose) std::cout << "Creating multigrid factory...\n";
     // Create multigrid factory
     std::shared_ptr<gko::LinOpFactory> multigrid_gen;
     multigrid_gen =
@@ -137,7 +153,7 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
             .on(exec);
 
     // Create solver factory
-    auto solver_gen = conjugate_gradient::build()
+    auto solver_gen = main_solver::build()
                           .with_criteria(iter_stop, tol_stop)
                           .with_preconditioner(multigrid_gen)
                           .on(exec);
@@ -302,15 +318,15 @@ int main(int argc, char *argv[])
         1u    // n_v_cycles
     };
 
-    evaluate_solver(exec, A, b, x, params);    
+    evaluate_solver(exec, A, b, x, params);   
 
     /*
     // Ranges for each parameter:
     std::vector<int> block_sizes = {2, 4, 8};   // max_block_size_jacobi
-    std::vector<int> smooth_values = {1, 2, 3, 4, 5};   // n_smooth
-    std::vector<double> relax_values = {0.7, 0.8, 0.9};      // relax_smooth
+    std::vector<int> smooth_values = {1, 2, 3};   // n_smooth
+    std::vector<double> relax_values = { 0.8, 0.9};      // relax_smooth
     std::vector<int> level_values = {6, 8, 10};   // max_levels
-    std::vector<int> v_cycles_values = {1, 2}; // n_v_cycles
+    std::vector<int> v_cycles_values = {1, 2, 3}; // n_v_cycles
 
     // For simplicity, we'll fix these to `true`. Adjust as needed.
     bool use_storage_optim_jacobi = true;
@@ -359,4 +375,5 @@ int main(int argc, char *argv[])
         }
     }
     */
+    
 }
