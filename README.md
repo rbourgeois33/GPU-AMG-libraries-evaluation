@@ -6,6 +6,11 @@ The libraries required for this project are located in the `data/` directory, an
 
 Gingko requires MPI and cmake.
 
+## 0. Clone the project and its submodules
+```bash
+git clone https://gitlab.com/rbourgeois1/ginkgo_evaluation_for_trust.git
+git submodule update --init --recursive
+```
 
 ## 1. Load Required Modules
 
@@ -37,12 +42,9 @@ module load rocm/6.2.0 \
 
 ## 2. Compile Ginkgo as an External Library
 
-### 1. Get Ginkgo Source and Create Build Directories
+### 1. Create Build Directories
 
 ```bash
-# Clone the Ginkgo repository (if not already done)
-# git clone https://github.com/ginkgo-project/ginkgo.git
-
 cd ginkgo
 mkdir build
 cd build
