@@ -21,7 +21,7 @@ using jacobi_preconditioner = gko::preconditioner::Jacobi<_TYPE_, _STYPE_>;
 using incomplete_cholesky_preconditioner = gko::preconditioner::Ic<gko::solver::LowerTrs<_TYPE_>>;
 using incomplete_cholesky_factorisation = gko::factorization::Ic<_TYPE_, _STYPE_>;
 
-//Useful struct
+// Useful struct
 struct ResolutionParams
 {
     // Jacobi parameters
@@ -40,12 +40,11 @@ struct ResolutionParams
     int n_v_cycles;
 };
 
-
 using A_t = std::shared_ptr<mtx>;
 using b_t = std::shared_ptr<vec>;
 using x_t = std::unique_ptr<vec>;
 using exec_t = std::shared_ptr<gko::Executor>;
-void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &x, const ResolutionParams &params)
+void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &x, const ResolutionParams &params, bool verbose = true, bool write_perfs = false)
 {
     // Unpack into local variables:
     auto max_block_size_jacobi = params.max_block_size_jacobi;
@@ -115,7 +114,8 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
                                        .with_criteria(iter_stop, exact_tol_stop)
                                        .on(exec));
 
-    std::cout << "Creating multigrid factory...\n";
+    if (verbose)
+        std::cout << "Creating multigrid factory...\n";
     // Create multigrid factory
     std::shared_ptr<gko::LinOpFactory> multigrid_gen;
     multigrid_gen =
@@ -142,7 +142,8 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
                           .with_preconditioner(multigrid_gen)
                           .on(exec);
 
-    std::cout << "Creating solver ...\n";
+    if (verbose)
+        std::cout << "Creating solver ...\n";
 
     // Create solver
     std::chrono::nanoseconds gen_time(0);
@@ -152,7 +153,8 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
     auto gen_toc = std::chrono::steady_clock::now();
     gen_time += std::chrono::duration_cast<std::chrono::nanoseconds>(gen_toc - gen_tic);
 
-    std::cout << "\nAll ready... Solving !\n";
+    if (verbose)
+        std::cout << "\nAll ready... Solving !\n";
 
     // Solve system
     exec->synchronize();
@@ -164,41 +166,54 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
     mynvtxRangePop("Solving");
     auto toc = std::chrono::steady_clock::now();
     time += std::chrono::duration_cast<std::chrono::nanoseconds>(toc - tic);
-    std::cout << "OK! results:\n\n";
+    if (verbose)
+        std::cout << "OK! results:\n\n";
 
     // Calculate residual
     auto res = gko::as<vec>(logger->get_residual_norm());
-    std::cout << "Final residual norm sqrt(r^T r): \n";
-    write(std::cout, res);
+    if (verbose){
+        std::cout << "Final residual norm sqrt(r^T r): \n";
+        write(std::cout, res);}
+
+    const int iteration_count = logger->get_num_iterations();
+    const double generation_time = static_cast<double>(gen_time.count()) / 1e9;
+    const double execution_time = static_cast<double>(time.count()) / 1e9;
+    const double execution_time_per_iter = execution_time / 1e-3 / iteration_count;
 
     // Print solver statistics
-    std::cout << "CG iteration count:     " << logger->get_num_iterations()
-              << std::endl;
-    std::cout << "CG generation time [s]: "
-              << static_cast<double>(gen_time.count()) / 1e9 << std::endl;
-    std::cout << "CG execution time [s]: "
-              << static_cast<double>(time.count()) / 1e9 << std::endl;
-    std::cout << "CG execution time per iteration[ms]: "
-              << static_cast<double>(time.count()) / 1e6 /
-                     logger->get_num_iterations()
-              << std::endl;
+    if (verbose)
+        std::cout << "CG iteration count:     " << iteration_count
+                  << std::endl;
+    if (verbose)
+        std::cout << "CG generation time [s]: "
+                  << generation_time << std::endl;
+    if (verbose)
+        std::cout << "CG execution time [s]: "
+                  << execution_time << std::endl;
+    if (verbose)
+        std::cout << "CG execution time per iteration[ms]: "
+                  << execution_time_per_iter
+                  << std::endl;
 
+    if (write_perfs)
+    {
+        std::ofstream csv("perfs.csv", std::ios_base::app);
+        csv << max_block_size_jacobi << ","
+            << n_smooth << ", "
+            << relax_smooth << ", "
+            << max_levels << ", "
+            << n_v_cycles << ", "
+            << iteration_count << ", "
+            << generation_time << ", "
+            << execution_time_per_iter << ", "
+            << execution_time
+            << "\n";
+    }
     return;
 }
 
 int main(int argc, char *argv[])
 {
-    // Resolution parameters
-    ResolutionParams params{
-        4u,   // max_block_size_jacobi
-        true, // use_storage_optim_jacobi
-        2u,   // n_smooth
-        0.9,  // relax_smooth
-        true, // pgm_deterministic
-        5u,   // max_levels
-        1u    // n_v_cycles
-    };
-
     // ---- Read user input and select device ----
 
     // Print version information
@@ -274,5 +289,74 @@ int main(int argc, char *argv[])
     std::cout << "Initial residual norm sqrt(r^T r): \n";
     write(std::cout, initres);
 
-    evaluate_solver(exec, A, b, x, params);
+    // One resolution :
+    
+    // Resolution parameters
+    ResolutionParams params{
+        4u,   // max_block_size_jacobi
+        true, // use_storage_optim_jacobi
+        1u,   // n_smooth
+        0.8,  // relax_smooth
+        true, // pgm_deterministic
+        6u,   // max_levels
+        1u    // n_v_cycles
+    };
+
+    evaluate_solver(exec, A, b, x, params);    
+
+    /*
+    // Ranges for each parameter:
+    std::vector<int> block_sizes = {2, 4, 8};   // max_block_size_jacobi
+    std::vector<int> smooth_values = {1, 2, 3, 4, 5};   // n_smooth
+    std::vector<double> relax_values = {0.7, 0.8, 0.9};      // relax_smooth
+    std::vector<int> level_values = {6, 8, 10};   // max_levels
+    std::vector<int> v_cycles_values = {1, 2}; // n_v_cycles
+
+    // For simplicity, we'll fix these to `true`. Adjust as needed.
+    bool use_storage_optim_jacobi = true;
+    bool pgm_deterministic = true;
+
+    //mCompute the total number of runs (cartesian product of all param ranges).
+    std::size_t total_runs = block_sizes.size() 
+                           * smooth_values.size() 
+                           * relax_values.size() 
+                           * level_values.size() 
+                           * v_cycles_values.size();
+
+    //Create a counter to track progress.
+    std::size_t counter = 0;
+
+    // Nested loops to cover the entire grid:
+    for (auto bs : block_sizes)
+    {
+        for (auto ns : smooth_values)
+        {
+            for (auto rs : relax_values)
+            {
+                for (auto ml : level_values)
+                {
+                    for (auto nvc : v_cycles_values)
+                    {
+                        // Build params for this specific combination
+                        ResolutionParams params{
+                            bs,                       // max_block_size_jacobi
+                            use_storage_optim_jacobi, // use_storage_optim_jacobi
+                            ns,                       // n_smooth
+                            rs,                       // relax_smooth
+                            pgm_deterministic,        // pgm_deterministic
+                            ml,                       // max_levels
+                            nvc                       // n_v_cycles
+                        };
+
+                        // Launch your solver with these parameters
+                        evaluate_solver(exec, A, b, x, params, false, true);
+                        x->copy_from(host_x);//reset x for fair comparison
+                        counter+=1;
+                        std::cout<<"Progession: "<<counter<<" / "<<total_runs<<std::endl;
+                    }
+                }
+            }
+        }
+    }
+    */
 }
