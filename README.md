@@ -51,3 +51,10 @@ Replace `_backend_` with one of the following options:
 - `hip`
 
 ---
+
+## On Jean zay (messy)
+For building ginkgo (long):
+```bash
+module load cuda/12.4.1 openmpi/4.1.5 cmake/3.18.0 
+srun -p compil -A pri@v100 -t 00:30:00 -c 24 --hint=nomultithread make -j24 install
+ ```
