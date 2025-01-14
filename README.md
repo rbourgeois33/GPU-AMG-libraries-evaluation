@@ -8,7 +8,7 @@ Gingko requires MPI and cmake.
 
 ## 0. Clone the project and its submodules
 ```bash
-git clone https://gitlab.com/rbourgeois1/ginkgo_evaluation_for_trust.git
+git clone https://gitlab.com/github.com/rbourgeois33/linalg_evaluation.git
 git submodule update --init --recursive
 ```
 
