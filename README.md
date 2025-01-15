@@ -1,4 +1,4 @@
-# Ginkgo Evaluation for TRUST
+# Linalg evaluation
 
 This project evaluates the [Ginkgo library](https://github.com/ginkgo-project/ginkgo) for solving linear systems derived from the TRUST platform CFD code ([TRUST platform](https://cea-trust-platform.github.io/)). 
 
@@ -45,7 +45,7 @@ module load rocm/6.2.0 \
 ### 1. Create Build Directories
 
 ```bash
-cd ginkgo
+cd lib/ginkgo
 mkdir build
 cd build
 mkdir install

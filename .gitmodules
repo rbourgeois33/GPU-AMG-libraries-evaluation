@@ -1,6 +1,6 @@
 [submodule "ginkgo"]
-	path = ginkgo
+	path = lib/ginkgo
 	url = https://github.com/ginkgo-project/ginkgo.git
 [submodule "mynvtx"]
-	path = mynvtx
+	path = lib/mynvtx
 	url = https://github.com/rbourgeois33/mynvtx
