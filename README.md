@@ -117,7 +117,7 @@ where `_backend_` can be:
 
 Choose the backend according to your machine’s capabilities and the Ginkgo libraries you built.
 
-# eval_AMGX
+# AMGX_eval
 
 ## 2. Compile AMGX as an External Library
 
@@ -143,5 +143,5 @@ make -j 12
 
 ## 4. Run the Program
 ```bash
-./eval_AMGX ../config_AMGX/file.json
+./AMGX_eval ../config_AMGX/file.json
 ```

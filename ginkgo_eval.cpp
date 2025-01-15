@@ -50,7 +50,7 @@ struct ResolutionParams
 
     // Multi-level cycle parameters
     int max_levels;
-    int n_amg_precond;
+    int max_iter_amg_precond;
 };
 
 using A_t = std::shared_ptr<mtx>;
@@ -66,7 +66,7 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
     auto relax_smooth = params.relax_smooth;
     auto pgm_deterministic = params.pgm_deterministic;
     auto max_levels = params.max_levels;
-    auto n_amg_precond = params.n_amg_precond;
+    auto max_iter_amg_precond = params.max_iter_amg_precond;
 
     // ---- Prepare the stopping criteria ----
 
@@ -91,19 +91,21 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
 
     // ---- customize some settings of the multigrid preconditioner. ----
 
+    /*
     auto incomplete_cholesky_gen = gko::share(
         incomplete_cholesky_preconditioner::build()
             .with_factorization(incomplete_cholesky_factorisation::build())
-            .on(exec));
+            .on(exec));*/
 
     auto jacobi_gen = gko::share(
         jacobi_preconditioner::build()
-            .with_max_block_size(max_block_size_jacobi)
+//            .with_max_block_size(max_block_size_jacobi)
             .on(exec));
 
+    /*
     auto gauss_seidel_gen = gko::share(
         gauss_seidel_preconditioner::build()
-            .on(exec));
+            .on(exec));*/
 
     if (use_storage_optim_jacobi)
     {
@@ -126,10 +128,10 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
     // characteristic, we can safely choose the CG. We reuse the jacobi factory here
     // to generate an jacobi preconditioner. It is important to solve until machine
     // precision here to get a good convergence rate.
-    auto coarsest_gen = gko::share(coarse_solver::build()
+    /*auto coarsest_gen = gko::share(coarse_solver::build()
                                        .with_preconditioner(preconditioner)
                                        .with_criteria(iter_stop, exact_tol_stop)
-                                       .on(exec));
+                                       .on(exec));*/
 
     if (verbose) std::cout << "Creating multigrid factory...\n";
     // Create multigrid factory
@@ -145,11 +147,11 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
             .with_post_uses_pre(true)
             // Algo to prolongation / refine grid
             .with_mg_level(multigrid_level_gen)
-            // Solver for coarsest solver
-            .with_coarsest_solver(coarsest_gen)
+            // Solver for coarsest solver --> No solver
+           // .with_coarsest_solver(coarsest_gen)
             .with_default_initial_guess(gko::solver::initial_guess_mode::zero)
             // Amount of iteration for the amg solver (1 as its used as a preconditioner)
-            .with_criteria(gko::stop::Iteration::build().with_max_iters(n_amg_precond))
+            .with_criteria(gko::stop::Iteration::build().with_max_iters(max_iter_amg_precond))
             .on(exec);
 
     // Create solver factory
@@ -218,7 +220,7 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
             << n_smooth << ", "
             << relax_smooth << ", "
             << max_levels << ", "
-            << n_amg_precond << ", "
+            << max_iter_amg_precond << ", "
             << iteration_count << ", "
             << generation_time << ", "
             << execution_time_per_iter << ", "
@@ -312,10 +314,10 @@ int main(int argc, char *argv[])
         4u,   // max_block_size_jacobi
         true, // use_storage_optim_jacobi
         1u,   // n_smooth
-        0.8,  // relax_smooth
-        true, // pgm_deterministic
-        6u,   // max_levels
-        1u    // n_amg_precond
+        0.9,  // relax_smooth
+        false, // pgm_deterministic
+        50u,   // max_levels
+        1u    // max_iter_amg_precond
     };
 
     evaluate_solver(exec, A, b, x, params);   
@@ -326,7 +328,7 @@ int main(int argc, char *argv[])
     std::vector<int> smooth_values = {1, 2, 3};   // n_smooth
     std::vector<double> relax_values = { 0.8, 0.9};      // relax_smooth
     std::vector<int> level_values = {6, 8, 10};   // max_levels
-    std::vector<int> v_cycles_values = {1, 2, 3}; // n_amg_precond
+    std::vector<int> v_cycles_values = {1, 2, 3}; // max_iter_amg_precond
 
     // For simplicity, we'll fix these to `true`. Adjust as needed.
     bool use_storage_optim_jacobi = true;
@@ -361,7 +363,7 @@ int main(int argc, char *argv[])
                             rs,                       // relax_smooth
                             pgm_deterministic,        // pgm_deterministic
                             ml,                       // max_levels
-                            nvc                       // n_amg_precond
+                            nvc                       // max_iter_amg_precond
                         };
 
                         // Launch your solver with these parameters
