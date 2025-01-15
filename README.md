@@ -39,6 +39,7 @@ module load rocm/6.2.0 \
 ```
 
 ---
+# eval_ginkgo
 
 ## 2. Compile Ginkgo as an External Library
 
@@ -116,5 +117,31 @@ where `_backend_` can be:
 
 Choose the backend according to your machine’s capabilities and the Ginkgo libraries you built.
 
+# eval_AMGX
 
+## 2. Compile AMGX as an External Library
 
+### 1. Create Build Directories and build
+
+```bash
+cd lib/AMGX
+mkdir build ; cd build
+cmake ..
+make -j 16
+```
+
+## 3. Build the Main Program
+
+After AMGX is installed, go back to your main program’s directory:
+
+```bash
+mkdir build
+cd build
+cmake ..
+make -j 12
+```
+
+## 4. Run the Program
+```bash
+./eval_AMGX ../config_AMGX/file.json
+```
