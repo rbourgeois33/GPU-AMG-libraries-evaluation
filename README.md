@@ -105,7 +105,7 @@ make -j 12
 ## 4. Run the Program
 
 ```bash
-./main _backend_
+./eval_ginkgo _backend_
 ```
 
 where `_backend_` can be:
@@ -115,4 +115,6 @@ where `_backend_` can be:
 - `hip`
 
 Choose the backend according to your machine’s capabilities and the Ginkgo libraries you built.
+
+
 
