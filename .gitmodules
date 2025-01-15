@@ -4,3 +4,6 @@
 [submodule "mynvtx"]
 	path = lib/mynvtx
 	url = https://github.com/rbourgeois33/mynvtx
+[submodule "lib/AMGX"]
+	path = lib/AMGX
+	url = https://github.com/NVIDIA/AMGX.git

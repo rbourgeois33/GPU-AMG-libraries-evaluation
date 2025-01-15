@@ -22,3 +22,16 @@ target_include_directories(ginkgo_eval PRIVATE ${CMAKE_SOURCE_DIR}/lib/mynvtx)
 
 # Link the Ginkgo library to the executable
 target_link_libraries(ginkgo_eval PRIVATE Ginkgo::ginkgo)
+
+# Point CMake to AMGX headers
+include_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/include")
+
+# Point CMake to AMGX libraries
+link_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/build")
+
+# Create the executable from your source file
+add_executable(eval_AMGX eval_AMGX.cpp)
+
+# Link against the AMGX shared library (AMGXsh).
+# If your library name differs, adjust accordingly (e.g., AMGX, libAMGXsh, etc.).
+target_link_libraries(eval_AMGX amgxsh)
