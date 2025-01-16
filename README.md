@@ -2,6 +2,8 @@
 
 This project evaluates the [Ginkgo library](https://github.com/ginkgo-project/ginkgo) for solving linear systems derived from the TRUST platform CFD code ([TRUST platform](https://cea-trust-platform.github.io/)). 
 
+The method we focus on is Preconditioned conjugate gradient with classical AMG preconditionning using a Jacobi smoother
+
 The libraries required for this project are located in the `data/` directory, and the main file is inspired by the examples provided by the Ginkgo project.
 
 Gingko requires MPI and cmake.

@@ -22,6 +22,7 @@ using biconjugate_gradient = gko::solver::Bicg<_TYPE_>; //Does not support AMG p
 using biconjugate_gradient_stabilized = gko::solver::Bicgstab<_TYPE_>; //7 iters
 using flexible_conjugate_gradient = gko::solver::Fcg<_TYPE_>; //14 iters
 using generalized_conjugate_residual =  gko::solver::Gcr<_TYPE_>; //13 iters
+
 using multigrid = gko::solver::Multigrid;
 
 using main_solver=conjugate_gradient;
@@ -78,11 +79,12 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
                                    .with_baseline(gko::stop::mode::initial_resnorm)
                                    .with_reduction_factor(tolerance)
                                    .on(exec));
+
     // Exact sol stop for coarse level
-    auto exact_tol_stop = gko::share(gko::stop::ResidualNorm<_TYPE_>::build()
-                                         .with_baseline(gko::stop::mode::rhs_norm)
-                                         .with_reduction_factor(1e-14)
-                                         .on(exec));
+    /*auto exact_tol_stop = gko::share(gko::stop::ResidualNorm<_TYPE_>::build()
+                                            .with_baseline(gko::stop::mode::absolute)
+                                            .with_reduction_factor(1e-14) // Absolute tolerance value
+                                            .on(exec));*/
 
     // Add criteria to logger
     std::shared_ptr<const gko::log::Convergence<_TYPE_>> logger = gko::log::Convergence<_TYPE_>::create();
@@ -99,7 +101,7 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
 
     auto jacobi_gen = gko::share(
         jacobi_preconditioner::build()
-//            .with_max_block_size(max_block_size_jacobi)
+     //       .with_max_block_size(max_block_size_jacobi) -> unsure what AMGX does
             .on(exec));
 
     /*
@@ -123,13 +125,13 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
     // Prologation/refinment algorithm
     auto multigrid_level_gen = gko::share(parallel_graph_matching::build().with_deterministic(pgm_deterministic).on(exec));
 
-    // Next we select a CG solver for the coarsest level. Again, since the input
-    // matrix is known to be spd, and the Pgm restriction preserves this
-    // characteristic, we can safely choose the CG. We reuse the jacobi factory here
-    // to generate an jacobi preconditioner. It is important to solve until machine
-    // precision here to get a good convergence rate.
+    //solver for coarse level
     /*auto coarsest_gen = gko::share(coarse_solver::build()
                                        .with_preconditioner(preconditioner)
+                                       .with_criteria(iter_stop, exact_tol_stop)
+                                       .on(exec));*/
+/*
+    auto coarsest_gen = gko::share(coarse_solver::build()
                                        .with_criteria(iter_stop, exact_tol_stop)
                                        .on(exec));*/
 
@@ -141,13 +143,17 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
             // Amounts of subgrids
             .with_max_levels(max_levels)
             // Min size of the coarse grid
-            //.with_min_coarse_rows(32u)
+            .with_min_coarse_rows(2u)
+            //specify cycle type
+            .with_cycle(gko::solver::multigrid::cycle::w) //w=2v ?
+            //Specify smoother
             .with_pre_smoother(smoother_gen)
             // Post smoother = pre smoother
             .with_post_uses_pre(true)
             // Algo to prolongation / refine grid
             .with_mg_level(multigrid_level_gen)
-            // Solver for coarsest solver --> No solver
+            // Solver for coarsest solver 
+            // --> default coarse grid solver, direct LU    ginkgo/core/solver/multigrid.cpp
            // .with_coarsest_solver(coarsest_gen)
             .with_default_initial_guess(gko::solver::initial_guess_mode::zero)
             // Amount of iteration for the amg solver (1 as its used as a preconditioner)
@@ -311,12 +317,12 @@ int main(int argc, char *argv[])
     
     // Resolution parameters
     ResolutionParams params{
-        4u,   // max_block_size_jacobi
+        9999u,   // max_block_size_jacobi
         true, // use_storage_optim_jacobi
         1u,   // n_smooth
-        0.9,  // relax_smooth
+        0.8,  // relax_smooth
         false, // pgm_deterministic
-        50u,   // max_levels
+        100,   // max_levels
         1u    // max_iter_amg_precond
     };
 
