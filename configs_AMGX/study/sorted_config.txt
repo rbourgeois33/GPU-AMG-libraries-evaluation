@@ -1,0 +1,214 @@
+These are the parameters used in AMGX of trust, sorted by categories
+Many parameters are not relevant to the method selected: PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-RELEVANT
+#Replaced means that the value differ from the default value
+
+PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-RELEVANT:
+
+    preconditioner = AMG  # Replaced
+    algorithm = CLASSICAL: //could be AGGREGATION or ENERGYMIN
+    selector = PMIS  # Replaced //the coarse grid selection algorithm
+    solver = PCG  # Replaced
+
+    CONVERGENCE_CHECK:
+        alt_rel_tolerance = 1e-12 //"alternative convergence relative tolerance for combined criteria"
+        convergence = RELATIVE_INI_CORE  # Replaced
+        rel_div_tolerance = -1 //elative tolerance for divergence checks (-1: disabled)
+        tolerance = 0.0001  # Replaced //the convergence tolerance
+        max_iters = 10000  # Replaced
+        norm = L2
+
+    SMOOTHER:
+        smoother = BLOCK_JACOBI  # Replaced
+        fine_smoother = BLOCK_JACOBI
+        coarse_smoother = BLOCK_JACOBI
+        coarsest_sweeps = 1  # Replaced //the number of smoothing iterations at the coarsest level
+        finest_sweeps = -1 //finest level sweeps number
+        intensive_smoothing = 0 //drastically increases smoothing iterations number
+        postsweeps = 1  # Replaced
+        presweeps = 1  # Replaced
+        relaxation_factor = 0.8  # Replaced //just jacobi ? "the relaxation factor used in a solver"
+
+    COARSE SOLVER:
+        coarse_solver = DENSE_LU_SOLVER
+        dense_lu_max_rows = 0 //(not used by default)
+        dense_lu_num_rows = 2  # Replaced //the dense LU solver will be triggered if the matrix size <= dense_lu_num_rows
+        exact_coarse_solve = 0 //flag that changes the dense LU coarse solve to solve the exact global problem for Classical AMG preconditioning
+        max_coarse_iters = 100
+
+    CYCLE:
+        cycle = V  # Replaced
+        cycle_iters = 2 //the number of CG iterations per outer iteration //only for CG and CGF cycles
+        max_levels = 100  # Replaced
+        min_fine_rows = 1
+    
+    INTERPOLATION:
+        interpolator = D2  # Replaced
+        interp_max_elements = -1
+        interp_truncation_factor = 1.1
+
+    //CHATGPT:
+    //Description: Determines the method used to measure the strength of connections between
+    // variables in the sparse matrix A. The strength of connection is fundamental in coarsening, 
+    //as it defines which points should be aggregated or grouped together.
+    STRENGHT:
+        strength = AHAT
+        strength_threshold = 0.25  # Replaced
+        affinity_iterations = 4
+        affinity_vectors = 4
+        max_row_sum = 1.1
+    
+    MISC:
+        block_format = ROW_MAJOR
+        determinism_flag = 1  # Replaced
+        matrix_writer = matrixmarket
+        
+    NOT UNDERSTOOD BUT SEEMS RELEVENT:
+        coarsen_threshold = 1 //Threshold for creating new coarse level
+        structure_reuse_levels = 0 //controls reuse of AMG hierarchy, 0 - everything rebuild
+
+
+    NOT UNDERSTOOD BUT OFF ANYWAY:
+        amg_consolidation_flag = 0
+        amg_host_levels_rows = -1 //Solve some on host
+        matrix_consolidation_lower_threshold = 0
+        matrix_consolidation_upper_threshold = 1000
+        fine_level_consolidation = 0
+        fine_levels = -1
+        use_cuda_ipc_consolidation = 0
+        use_scalar_norm = 0  # Replaced
+        use_sum_stopping_criteria = 0
+        error_scaling = 0  # Replaced
+
+        AGRESSIVE_STRATEGY: //not sure what it is
+            aggressive_interpolator = MULTIPASS
+            aggressive_levels = 0
+            aggressive_selector = DEFAULT
+    
+    DIAGS:
+        convergence_analysis = 0
+        exception_handling = 1  # Replaced
+        monitor_residual = 1  # Replaced
+        obtain_timings = 1  # Replaced
+        print_config = 1  # Replaced
+        print_grid_stats = 1  # Replaced
+        print_solve_stats = 1  # Replaced
+        print_vis_data = 0
+        solver_verbose = 0
+        store_res_history = 1  # Replaced
+        verbosity_level = 3
+
+
+
+PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-IRRELEVENT:
+
+    GS_L1_variant = 0 //Flag to control if GS smoother use L1 variant <0|1>
+    block_convert = 0 //asks the reader to perform conversion to block matrix. <0>: do not perform conversion
+    complex_conversion = 0
+
+    cf_smoothing_mode = 0//CF Jacobi
+
+
+    reuse_scale = 0
+    rhs_from_a = 0
+    scaling = NONE
+    scaling_smoother_steps = 2
+    subspace_dim_s = 8 //IDR
+
+
+    MPI:
+        matrix_halo_exchange = 0
+        communicator = MPI
+        separation_exterior = OWNED
+        separation_interior = INTERIOR
+        min_rows_latency_hiding = -1
+
+
+
+    COLORING: //no colored methods are used (it's explicit in methods names)
+        boundary_coloring = SYNC_COLORS //handling of boundary coloring for ILU solvers <ColoringType>
+        coloring_custom_arg = 
+        coloring_level = 1
+        coloring_try_remove_last_colors = 0
+        geometric_dim = 2 //use by uniform coloring algorithm",
+        halo_coloring = LAST
+        initial_color = 0
+        insert_diag_while_reordering = 0
+        kaczmarz_coloring_needed = 1
+        late_rejection = 0
+        matrix_coloring_scheme = MIN_MAX
+        max_num_hash = 7
+        max_uncolored_percentage = 0.15
+        num_colors = 10
+        print_coloring_info = 0
+        reorder_cols_by_color = 0
+        use_bsrxmv = 0
+
+
+    
+    GAUSS SEIDEL:
+        symmetric_GS = 0
+        jacobi_iters = 5 //"the inner iterations for GSINNER
+
+    CHEBYSHEV SMOOTHER: //unused
+        cheby_max_lambda = 1
+        cheby_min_lambda = 0.125
+        chebyshev_lambda_estimate_mode = 0
+        chebyshev_polynomial_order = 5
+    
+    POLYNOMIAL SMOOTHER:
+        kpz_mu = 4
+        kpz_order = 3
+
+    AGGREGATION-AMG:
+        aggregate_size = 2
+        aggregation_edge_weight_component = 0
+        coarseAgenerator = LOW_DEG //the method used to compute the Galerkin product in Agg-AMG
+        coarseAgenerator_coarse = LOW_DEG
+        handshaking_phases = 1 //number of handshaking phases for aggregation step, val
+        max_matching_iterations = 15 //"the maximum number of 'matching' iterations in the size2_sele
+        print_aggregation_info = 0
+
+    
+    ENERGYMIN-AMG:
+        energymin_interpolator = EM
+        energymin_selector = CR
+    
+    DEVICE/CUDA:
+        device_alloc_scaling_factor = 10
+        device_alloc_scaling_threshold = 16384
+        device_consolidation_pool_size = 268435456
+        device_mem_pool_max_alloc_size = 20971520
+        device_mem_pool_size = 268435456
+        device_mem_pool_size_limit = 0
+        high_priority_stream = 0
+        num_streams = 0
+        serialize_threads = 0
+        spmm_gmem_size = 1024 // "Deprecated. DO NOT USE IN NEW CONFIG
+        spmm_max_attempts = 6
+        spmm_no_sort = 1
+        spmm_verbose = 0
+        use_cusparse_kernels = 0
+        use_opt_kernels = 0
+    
+    SELECTOR=PAIRWISE: (our selector is PMIS)
+        aggregation_passes = 3
+        full_ghost_level = 0
+        filter_weights = 0
+        filter_weights_alpha = 0.5
+        notay_weights = 0
+        ghost_offdiag_limit = 0
+        merge_singletons = 1
+        serial_matching = 0
+        modified_handshake = 0
+        weight_formula = 0
+    
+    GMRES:   
+        gmres_krylov_dim = 0
+        gmres_n_restart = 20
+    
+    ILU:   
+        ilu_sparsity_level = 0
+
+
+
+      
