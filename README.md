@@ -142,6 +142,11 @@ make -j 12
 ```
 
 ## 4. Run the Program
+generate the AMGX Matrix Market formatted input file (AMGX can't read A and b separatly, they must be in the same file)
+```bash
+cd data/
+./AMGX_formatter.sh A.mtx rhs.mtx
+```
 ```bash
 ./AMGX_eval ../config_AMGX/file.json
 ```

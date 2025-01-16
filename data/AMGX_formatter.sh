@@ -13,17 +13,6 @@ rhs_file="$2"
 # Output file
 output_file="AMGX_system.mtx"
 
-# Check if input files exist
-if [ ! -f "$aij_file" ]; then
-    echo "Error: File $aij_file does not exist."
-    exit 1
-fi
-
-if [ ! -f "$rhs_file" ]; then
-    echo "Error: File $rhs_file does not exist."
-    exit 1
-fi
-
 # Clear output file or create it
 > "$output_file"
 
