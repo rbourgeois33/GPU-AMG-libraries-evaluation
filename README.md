@@ -150,3 +150,4 @@ cd data/
 ```bash
 ./AMGX_eval ../config_AMGX/file.json
 ```
+optional: add `write_w`to the command line to write the output of the resolution in the mtx format.

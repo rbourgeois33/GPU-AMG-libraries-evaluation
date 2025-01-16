@@ -1,16 +1,46 @@
 #include <iostream>
 #include <string>
 #include <amgx_c.h>
+#include <cstring>
 
 //AMGX_RC is AMGX Return Code, all AMGX functions output one
 //This function helps decoding it
-void check_amgx_error(AMGX_RC rc, const char *msg) {
+void check_amgx_error(AMGX_RC rc, const char *msg) 
+{
     if (rc != AMGX_RC_OK) {
         char err_string[256];
         AMGX_get_error_string(rc, err_string, sizeof(err_string));
         std::cerr << "Error: " << msg << " - " << err_string << std::endl;
         exit(EXIT_FAILURE);
     }
+}
+
+void write_vector_to_disk(const AMGX_vector_handle& vector_handle, const char* filename)
+{
+    // Assume vector_handle is created and properly initialized
+    int size, _;  // To store the number of elements in vector, _ is for the batch size, irrelevant here
+
+    // Get the size of the vector
+    AMGX_vector_get_size(vector_handle, &size, &_);
+
+    double *host_vector = (double *)malloc(size * sizeof(double)); // Allocate memory on host
+
+    // Download the solution vector from GPU to host
+    AMGX_vector_download(vector_handle, host_vector);
+
+    // Write the solution to a file
+    FILE *f = fopen(filename, "w");
+    fprintf(f, "%%MatrixMarket matrix array real general\n");
+    fprintf(f, "%d %d\n", size, 1);
+    for (int i = 0; i < size; i++) 
+    {
+        fprintf(f, "%.15e\n", host_vector[i]);
+    }
+    fclose(f);
+
+    free(host_vector); // Free host memory
+
+    std::cout<<"file "<<filename <<" written !\n";
 }
 
 int main(int argc, char* argv[])
@@ -79,9 +109,15 @@ int main(int argc, char* argv[])
  
     // 9. Solve the system
     rc = AMGX_solver_solve(solver, b, x);
-    check_amgx_error(rc, "AMGX_solver_setup:");
-    //No need to output stuff: AMGX handles it (optional in config/json file)
 
+    check_amgx_error(rc, "AMGX_solver_setup:");
+    //No need to print stuff: AMGX handles it (optional in config/json file)
+
+    if (argc>=2){
+        if (strcmp(argv[2], "-write_x")){
+            write_vector_to_disk(x, "../data/AMGX_output_x.mtx");
+        }
+    }
 
     // 10. Clean up and shut down
     AMGX_solver_destroy(solver);
