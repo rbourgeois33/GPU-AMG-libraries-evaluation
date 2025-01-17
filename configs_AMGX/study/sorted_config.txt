@@ -6,7 +6,6 @@ PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-RELEVANT:
 
     preconditioner = AMG  # Replaced
     algorithm = CLASSICAL: //could be AGGREGATION or ENERGYMIN
-    selector = PMIS  # Replaced //the coarse grid selection algorithm
     solver = PCG  # Replaced
 
     CONVERGENCE_CHECK:
@@ -41,21 +40,22 @@ PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-RELEVANT:
         max_levels = 100  # Replaced
         min_fine_rows = 1
     
-    INTERPOLATION:
-        interpolator = D2  # Replaced
-        interp_max_elements = -1
-        interp_truncation_factor = 1.1
-
-    //CHATGPT:
-    //Description: Determines the method used to measure the strength of connections between
-    // variables in the sparse matrix A. The strength of connection is fundamental in coarsening, 
-    //as it defines which points should be aggregated or grouped together.
-    STRENGHT:
+Classical Algebraic Multgrid (Classical AMG), also known as Ruge-Steuben AMG, or Selection AMG, is a
+family of methods where the coarse grid is formed by “selecting” fine points to be carried through the coarse
+grid. Interpolation weights are then assigned to each fine point indicating how the values at the fine points
+will be weighted when forming th value of the coarse point
+    COARSENING:
+        selector = PMIS  # Replaced //the coarse grid selection algorithm
         strength = AHAT
         strength_threshold = 0.25  # Replaced
         affinity_iterations = 4
         affinity_vectors = 4
         max_row_sum = 1.1
+            INTERPOLATION:
+            interpolator = D2  # Replaced
+            interp_max_elements = -1
+            interp_truncation_factor = 1.1
+
     
     MISC:
         block_format = ROW_MAJOR
