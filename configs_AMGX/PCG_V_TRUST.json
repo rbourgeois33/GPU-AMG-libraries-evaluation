@@ -16,8 +16,8 @@
                 "relaxation_factor":0.8
             },
             "selector":"PMIS", 
-            "interpolator":"D2", 
             "strength_threshold":0.25,
+            "interpolator":"D2", 
             "print_solve_stats": 0, 
             "presweeps": 1, 
             "interpolator": "D2",
@@ -27,6 +27,7 @@
             "scope": "amg", 
             "max_levels": 100, 
             "cycle": "V", 
+            "cycle_iters":2,
             "postsweeps": 1,
             "coarse_solver":"DENSE_LU_SOLVER",
             "dense_lu_num_rows":2
