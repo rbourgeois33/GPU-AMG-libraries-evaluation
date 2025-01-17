@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 {
     // 1. Parse input argument
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <config_file.json>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <config_file.json> (optional: -write_x)" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
     check_amgx_error(rc, "AMGX_solver_setup:");
     //No need to print stuff: AMGX handles it (optional in config/json file)
 
-    if (argc>=2){
-        if (strcmp(argv[2], "-write_x")){
+    if (argc>=3){
+        if (strcmp(argv[2], "-write_x")==0){
             write_vector_to_disk(x, "../data/AMGX_output_x.mtx");
         }
     }
