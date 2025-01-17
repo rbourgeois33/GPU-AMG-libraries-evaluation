@@ -1,5 +1,5 @@
-These are the parameters used in AMGX of trust, sorted by categories
-Many parameters are not relevant to the method selected: PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-RELEVANT
+These are the parameters used in the AMGX of TRUST, sorted by categories
+Many parameters are not relevant to the method selected: PCG preconditionned with CLASSICAL AMG + Jacobi smoother
 #Replaced means that the value differ from the default value
 
 PCG-preconditionned-with-CLASSICAL-AMG-Jacobi-smoother-RELEVANT:
