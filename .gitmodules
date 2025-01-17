@@ -7,3 +7,6 @@
 [submodule "lib/AMGX"]
 	path = lib/AMGX
 	url = https://github.com/NVIDIA/AMGX.git
+[submodule "lib/amgcl"]
+	path = lib/amgcl
+	url = https://github.com/ddemidov/amgcl.git

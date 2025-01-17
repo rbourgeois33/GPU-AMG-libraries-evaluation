@@ -37,3 +37,9 @@ add_executable(AMGX_eval AMGX_eval.cpp)
 # Link against the AMGX shared library (AMGXsh).
 # If your library name differs, adjust accordingly (e.g., AMGX, libAMGXsh, etc.).
 target_link_libraries(AMGX_eval amgxsh)
+
+# ----
+
+#add_subdirectory(lib/amgcl)
+#add_executable(amgcl_eval amgcl_eval.cpp)
+#target_link_libraries(amgcl_eval amgcl::amgcl)
