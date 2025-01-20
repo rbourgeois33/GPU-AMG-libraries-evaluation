@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
         amgcl::amg<
             Backend,
             amgcl::coarsening::ruge_stuben,
+ //           amgcl::coarsening::aggregation,
             amgcl::relaxation::damped_jacobi
             >,
         amgcl::solver::cg<Backend>
@@ -69,10 +70,17 @@ int main(int argc, char *argv[]) {
     // solver parameters, so we also need to create those. But we can leave
     // them with the default values:
     Solver::params prm;
-
     //Relative tol
     prm.solver.tol = 5e-4;
-    prm.relaxation.damping=0.8
+    prm.solver.maxiter = 100;
+    prm.precond.npre=1;
+    prm.precond.npost=1;
+    prm.precond.max_levels=100;
+    prm.precond.coarse_enough=2;
+    prm.precond.direct_coarse=true;
+    prm.precond.ncycle=1;
+    prm.precond.relax.damping = 0.8;
+    prm.precond.coarsening.eps_strong = 0.25;
 
     // Initialize the solver with the system matrix:
     prof.tic("setup");
