@@ -9,6 +9,7 @@ This project evaluates the following libraries that implement a AMG-precondition
 
 -[amgcl](https://github.com/ddemidov/amgcl)
 
+It also serves as a compilation of minimal example for each library.
 
 The compilation process will compile all the cpp files, there is one per library
 
