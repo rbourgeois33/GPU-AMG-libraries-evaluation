@@ -1,4 +1,4 @@
-// This file is heavily inspired  the ginkgo's project examples:
+// This file is heavily inspired by the ginkgo's project examples:
 /* https://github.com/ginkgo-project/ginkgo/tree/develop/examples */
 
 #include <fstream>
@@ -101,7 +101,7 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
 
     auto jacobi_gen = gko::share(
         jacobi_preconditioner::build()
-     //       .with_max_block_size(max_block_size_jacobi) -> unsure what AMGX does
+            .with_max_block_size(max_block_size_jacobi) //-> unsure what AMGX does
             .on(exec));
 
     /*
@@ -143,9 +143,9 @@ void evaluate_solver(const exec_t &exec, const A_t &A, const b_t &b, const x_t &
             // Amounts of subgrids
             .with_max_levels(max_levels)
             // Min size of the coarse grid
-            .with_min_coarse_rows(2u)
+            //.with_min_coarse_rows(2u)
             //specify cycle type
-            .with_cycle(gko::solver::multigrid::cycle::w) //w=2v ?
+            .with_cycle(gko::solver::multigrid::cycle::v) //w=2v ?
             //Specify smoother
             .with_pre_smoother(smoother_gen)
             // Post smoother = pre smoother
@@ -317,12 +317,12 @@ int main(int argc, char *argv[])
     
     // Resolution parameters
     ResolutionParams params{
-        9999u,   // max_block_size_jacobi
+        4u,   // max_block_size_jacobi
         true, // use_storage_optim_jacobi
         1u,   // n_smooth
         0.8,  // relax_smooth
         false, // pgm_deterministic
-        100,   // max_levels
+        50,   // max_levels
         1u    // max_iter_amg_precond
     };
 
