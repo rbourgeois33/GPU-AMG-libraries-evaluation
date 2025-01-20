@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Set the project name and specify C++ standard
-project(GinkgoExample LANGUAGES CXX)
+project(AMG_EVAL LANGUAGES CXX CUDA)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ---- Ginkgo
 
 # Add the Ginkgo library (adjust the path to the installed Ginkgo)
 set(GINKGO_DIR "${CMAKE_SOURCE_DIR}/lib/ginkgo/build/install")
@@ -23,7 +26,7 @@ target_include_directories(ginkgo_eval PRIVATE ${CMAKE_SOURCE_DIR}/lib/mynvtx)
 # Link the Ginkgo library to the executable
 target_link_libraries(ginkgo_eval PRIVATE Ginkgo::ginkgo)
 
-# ----
+# ---- AMGX
 
 # Point CMake to AMGX headers
 include_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/include")
@@ -38,8 +41,28 @@ add_executable(AMGX_eval AMGX_eval.cpp)
 # If your library name differs, adjust accordingly (e.g., AMGX, libAMGXsh, etc.).
 target_link_libraries(AMGX_eval amgxsh)
 
-# ----
+# ---- amgcl-cuda
 
-#add_subdirectory(lib/amgcl)
-#add_executable(amgcl_eval amgcl_eval.cpp)
-#target_link_libraries(amgcl_eval amgcl::amgcl)
+# Tell CMake that we need CUDA language:
+enable_language(CUDA)
+
+find_package(CUDAToolkit REQUIRED)
+
+# E.g. for Volta (sm_70) or Turing (sm_75) or Ampere (sm_80) etc.
+set(CMAKE_CUDA_ARCHITECTURES 70 75 80)  # or just "75", etc.
+
+add_subdirectory(lib/amgcl)
+
+set_source_files_properties(
+    amgcl_cuda_eval.cpp
+    PROPERTIES
+        LANGUAGE CUDA
+)
+
+add_executable(amgcl_cuda_eval amgcl_cuda_eval.cpp)
+
+target_link_libraries(amgcl_cuda_eval
+    PRIVATE
+        amgcl::amgcl
+        CUDA::cusparse
+)
