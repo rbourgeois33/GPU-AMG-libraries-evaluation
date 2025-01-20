@@ -10,7 +10,7 @@ The compilation process will compile all the cpp files, there is one per library
 
 ## 0. Clone the project and its submodules
 ```bash
-git clone https://gitlab.com/github.com/rbourgeois33/linalg_evaluation.git
+git clone git clone https://gitlab.com/github.com/rbourgeois33/linalg_evaluation.git
 git submodule update --init --recursive
 ```
 
