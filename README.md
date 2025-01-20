@@ -10,7 +10,8 @@ The compilation process will compile all the cpp files, there is one per library
 
 ## 0. Clone the project and its submodules
 ```bash
-git clone git clone https://gitlab.com/github.com/rbourgeois33/linalg_evaluation.git
+git clone git clone https://github.com/rbourgeois33/GPU-AMG-libraries-evaluation
+cd GPU-AMG-libraries-evaluation
 git submodule update --init --recursive
 ```
 
