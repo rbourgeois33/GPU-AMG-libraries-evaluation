@@ -7,7 +7,7 @@ This project evaluates the following libraries that implement a AMG-precondition
 
 -[AMGX](https://github.com/NVIDIA/AMGX)
 
--[amgcl]([https://github.com/NVIDIA/AMGX](https://github.com/ddemidov/amgcl)
+-[amgcl](https://github.com/ddemidov/amgcl)
 
 
 The compilation process will compile all the cpp files, there is one per library
