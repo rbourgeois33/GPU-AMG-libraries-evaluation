@@ -4,7 +4,11 @@
 This project evaluates the following libraries that implement a AMG-preconditioned conjugate gradient solver on the gpu or solving linear systems derived from the TRUST platform CFD code ([TRUST platform](https://cea-trust-platform.github.io/)): 
 
 -[Ginkgo library](https://github.com/ginkgo-project/ginkgo)
+
 -[AMGX](https://github.com/NVIDIA/AMGX)
+
+-[amgcl]([https://github.com/NVIDIA/AMGX](https://github.com/ddemidov/amgcl)
+
 
 The compilation process will compile all the cpp files, there is one per library
 
