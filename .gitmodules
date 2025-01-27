@@ -10,3 +10,6 @@
 [submodule "lib/amgcl"]
 	path = lib/amgcl
 	url = https://github.com/ddemidov/amgcl.git
+[submodule "lib/hypre"]
+	path = lib/hypre
+	url = https://github.com/hypre-space/hypre.git

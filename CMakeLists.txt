@@ -41,7 +41,7 @@ add_executable(AMGX_eval AMGX_eval.cpp)
 # If your library name differs, adjust accordingly (e.g., AMGX, libAMGXsh, etc.).
 target_link_libraries(AMGX_eval amgxsh)
 
-# ---- amgcl-cuda
+# # ---- amgcl-cuda
 
 # Tell CMake that we need CUDA language:
 enable_language(CUDA)
@@ -65,4 +65,21 @@ target_link_libraries(amgcl_cuda_eval
     PRIVATE
         amgcl::amgcl
         CUDA::cusparse
-)
+ )
+
+
+# ---- hypre
+
+
+# Specify the correct path to the Hypre library
+set(HYPRE_DIR "${CMAKE_SOURCE_DIR}/lib/hypre/build/install") # Use the 'build' folder where the library is found
+
+# Add the executable target for your file
+add_executable(hypre_eval hypre_eval.cpp)
+
+# Include the Hypre headers
+target_include_directories(hypre_eval PRIVATE ${HYPRE_DIR}/include)
+
+# Link the Hypre library
+target_link_directories(hypre_eval PRIVATE ${HYPRE_DIR}/lib)
+target_link_libraries(hypre_eval PRIVATE ${HYPRE_DIR}/lib/libHYPRE.a) # Static linking

@@ -186,3 +186,24 @@ make -j 12
 ```bash
 ./amgcl_cuda_eval ../data/aij_2592000.mtx ../data/rhs_2592000.mtx
 ```
+
+# hypre
+
+## 2. Compile Hypre as an External Library
+
+### 1. Create Build Directories
+
+```bash
+cd lib/hypre
+mkdir build
+cd build
+mkdir install
+```
+
+### 2. CMake Configuration
+
+- **On Jean Zay, Petra & ada**
+```bash
+cmake -DHYPRE_ENABLE_OPENMP=ON -DHYPRE_ENABLE_CUDA=ON -DCMAKE_INSTALL_PREFIX=install/ ../src/
+make -j12 install
+```
