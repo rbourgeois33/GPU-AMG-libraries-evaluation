@@ -320,9 +320,9 @@ int main(int argc, char *argv[])
         4u,   // max_block_size_jacobi
         true, // use_storage_optim_jacobi
         1u,   // n_smooth
-        0.8,  // relax_smooth
+        0.666667,  // relax_smooth
         false, // pgm_deterministic
-        50,   // max_levels
+        100,   // max_levels
         1u    // max_iter_amg_precond
     };
 

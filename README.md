@@ -30,6 +30,12 @@ module load cuda/12.1.0 \
             openmpi/gcc_11.2.0/4.1.4
 ```
 
+### Ada (NVIDIA Ada 6000)
+
+```bash
+module load cuda/12.4.0 
+```
+
 ### Jean Zay (NVIDIA A100)
 
 ```bash
@@ -62,8 +68,9 @@ mkdir install
 
 ### 2. CMake Configuration
 
-- **On Jean Zay & Petra**
+- **On Jean Zay, Petra & ada**
 
+Change the arch according to your gpu (Ada, Volta...)
   ```bash
   cmake -DGINKGO_BUILD_EXAMPLES=ON \
         -DGINKGO_BUILD_OMP=ON \
@@ -114,7 +121,7 @@ make -j 12
 ## 4. Run the Program
 
 ```bash
-./eval_ginkgo _backend_
+./ginkgo_eval _backend_
 ```
 
 where `_backend_` can be:
@@ -159,3 +166,23 @@ cd data/
 ./AMGX_eval ../config_AMGX/file.json
 ```
 optional: add `write_w`to the command line to write the output of the resolution in the mtx format.
+
+
+# amgcl_cuda_eval
+
+## 3. Build the Main Program
+
+No pre-install is required
+
+```bash
+mkdir build
+cd build
+cmake ..
+make -j 12
+```
+
+## 4. Run the Program
+
+```bash
+./amgcl_cuda_eval ../data/aij_2592000.mtx ../data/rhs_2592000.mtx
+```
