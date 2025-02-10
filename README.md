@@ -1,114 +1,97 @@
-# GPU-AMG-librairies-evaluation
+# GPU-AMG Libraries Evaluation
 
+This project evaluates several libraries implementing an AMG-preconditioned conjugate gradient solver on the GPU for solving linear systems derived from the TRUST platform CFD code ([TRUST platform](https://cea-trust-platform.github.io/)).
 
-This project evaluates the following libraries that implement a AMG-preconditioned conjugate gradient solver on the gpu or solving linear systems derived from the TRUST platform CFD code ([TRUST platform](https://cea-trust-platform.github.io/)): 
+## Libraries Evaluated
+- [Ginkgo](https://github.com/ginkgo-project/ginkgo)
+- [AMGX](https://github.com/NVIDIA/AMGX)
+- [amgcl](https://github.com/ddemidov/amgcl)
+- [Hypre](https://github.com/hypre-space/hypre)
 
--[Ginkgo library](https://github.com/ginkgo-project/ginkgo)
-
--[AMGX](https://github.com/NVIDIA/AMGX)
-
--[amgcl](https://github.com/ddemidov/amgcl)
-
-It also serves as a compilation of minimal example for each library.
-
-The compilation process will compile all the cpp files, there is one per library
-
-## 0. Clone the project and its submodules
+## 1. Clone the Project and Submodules
 ```bash
-git clone git clone https://github.com/rbourgeois33/GPU-AMG-libraries-evaluation
+git clone https://github.com/rbourgeois33/GPU-AMG-libraries-evaluation
 cd GPU-AMG-libraries-evaluation
 git submodule update --init --recursive
 ```
 
-## 1. Load Required Modules
+## 2. Load Required Modules
 
-### Petra (NVIDIA A5000)
-
+### NVIDIA A5000 (Petra)
 ```bash
 module load cuda/12.1.0 \
             cmake/3.18.4 \
             openmpi/gcc_11.2.0/4.1.4
 ```
-
-### Ada (NVIDIA Ada 6000)
-
+### NVIDIA Ada 6000 (Ada)
 ```bash
-module load cuda/12.4.0 
+module load cuda/12.4.0 openmpi/gcc_13.3.0/
 ```
 
-### Jean Zay (NVIDIA A100)
-
+### NVIDIA A100 (Jean Zay)
 ```bash
 module load cuda/12.4.1 \
             openmpi/4.1.5 \
             cmake/3.18.0
 ```
-
-### AMD GPU Machine (AMD Radeon PRO W7900)
-
+### AMD Radeon PRO W7900
 ```bash
 module load rocm/6.2.0 \
             openmpi/gcc_13.3.0/ \
             cmake/3.21.1
 ```
 
----
-# eval_ginkgo
-
-## 2. Compile Ginkgo as an External Library
-
-### 1. Create Build Directories
-
+## 3. Build All Libraries
+### Ginkgo
 ```bash
 cd lib/ginkgo
-mkdir build
-cd build
+mkdir build && cd build
 mkdir install
 ```
-
-### 2. CMake Configuration
-
-- **On Jean Zay, Petra & ada**
-
-Change the arch according to your gpu (Ada, Volta...)
-  ```bash
-  cmake -DGINKGO_BUILD_EXAMPLES=ON \
-        -DGINKGO_BUILD_OMP=ON \
-        -DGINKGO_BUILD_CUDA=ON \
-        -DGINKGO_CUDA_ARCHITECTURES=Ampere \
-        -DCMAKE_INSTALL_PREFIX=install/ ..
-  ```
-
+#### **CMake Configuration**
+- **On Jean Zay, Petra & Ada**
+```bash
+cmake -DGINKGO_BUILD_EXAMPLES=ON \
+      -DGINKGO_BUILD_OMP=ON \
+      -DGINKGO_BUILD_CUDA=ON \
+      -DGINKGO_CUDA_ARCHITECTURES=Ampere \
+      -DCMAKE_INSTALL_PREFIX=install/ ..
+```
 - **On AMD GPU Machine**
-
-  ```bash
-  cmake -DGINKGO_BUILD_EXAMPLES=ON \
-        -DGINKGO_BUILD_OMP=ON \
-        -DGINKGO_BUILD_HIP=ON \
-        -DCMAKE_INSTALL_PREFIX=install/ ..
-  ```
-
-### 3. Build and Install
-
+```bash
+cmake -DGINKGO_BUILD_EXAMPLES=ON \
+      -DGINKGO_BUILD_OMP=ON \
+      -DGINKGO_BUILD_HIP=ON \
+      -DCMAKE_INSTALL_PREFIX=install/ ..
+```
+#### **Build and Install**
 - **On Petra & AMD GPU Machine**
-
-  ```bash
-  make -j 48 install
-  ```
-
+```bash
+make -j 48 install
+```
 - **On Jean Zay**  
-  Compiling Ginkgo is heavy, so you need to launch a compile job:
-  
-  ```bash
-  srun -p compil -A pri@v100 -t 00:30:00 -c 24 --hint=nomultithread make -j24 install
-  ```
+```bash
+srun -p compil -A pri@v100 -t 00:30:00 -c 24 --hint=nomultithread make -j24 install
+```
 
----
+### AMGX
+```bash
+cd lib/AMGX
+mkdir build && cd build
+cmake ..
+make -j 16
+```
 
-## 3. Build the Main Program
+### Hypre
+```bash
+cd lib/hypre
+mkdir build && cd build
+mkdir install
+cmake -DHYPRE_ENABLE_OPENMP=ON -DHYPRE_ENABLE_CUDA=ON -DCMAKE_INSTALL_PREFIX=install/ ../src/
+make -j12 install
+```
 
-After Ginkgo is installed, go back to your main program’s directory:
-
+## 4. Build the Main Program
 ```bash
 mkdir build
 cd build
@@ -116,94 +99,34 @@ cmake ..
 make -j 12
 ```
 
----
+## 5. Run the Programs
 
-## 4. Run the Program
-
+### **Ginkgo Evaluation**
 ```bash
 ./ginkgo_eval _backend_
 ```
-
 where `_backend_` can be:
 - `cuda`
 - `omp`
 - `reference`
 - `hip`
 
-Choose the backend according to your machine’s capabilities and the Ginkgo libraries you built.
-
-# AMGX_eval
-
-## 2. Compile AMGX as an External Library
-
-### 1. Create Build Directories and build
-
-```bash
-cd lib/AMGX
-mkdir build ; cd build
-cmake ..
-make -j 16
-```
-
-## 3. Build the Main Program
-
-After AMGX is installed, go back to your main program’s directory:
-
-```bash
-mkdir build
-cd build
-cmake ..
-make -j 12
-```
-
-## 4. Run the Program
-generate the AMGX Matrix Market formatted input file (AMGX can't read A and b separatly, they must be in the same file)
+### **AMGX Evaluation**
+Generate the AMGX Matrix Market formatted input file (AMGX requires A and b in the same file):
 ```bash
 cd data/
 ./AMGX_formatter.sh A.mtx rhs.mtx
 ```
+Run AMGX solver:
 ```bash
 ./AMGX_eval ../config_AMGX/file.json
 ```
-optional: add `write_w`to the command line to write the output of the resolution in the mtx format.
+Optional: Add `write_w` to the command to write the output of the resolution in `.mtx` format.
 
-
-# amgcl_cuda_eval
-
-## 3. Build the Main Program
-
-No pre-install is required
-
-```bash
-mkdir build
-cd build
-cmake ..
-make -j 12
-```
-
-## 4. Run the Program
-
+### **AMGCL CUDA Evaluation**
 ```bash
 ./amgcl_cuda_eval ../data/aij_2592000.mtx ../data/rhs_2592000.mtx
 ```
 
-# hypre
-
-## 2. Compile Hypre as an External Library
-
-### 1. Create Build Directories
-
-```bash
-cd lib/hypre
-mkdir build
-cd build
-mkdir install
-```
-
-### 2. CMake Configuration
-
-- **On Jean Zay, Petra & ada**
-```bash
-cmake -DHYPRE_ENABLE_OPENMP=ON -DHYPRE_ENABLE_CUDA=ON -DCMAKE_INSTALL_PREFIX=install/ ../src/
-make -j12 install
-```
+### **Hypre Evaluation**
+Run the Hypre solver with appropriate input files and configuration.
