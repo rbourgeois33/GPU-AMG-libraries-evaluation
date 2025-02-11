@@ -10,3 +10,6 @@
 [submodule "lib/amgcl"]
 	path = lib/amgcl
 	url = https://github.com/ddemidov/amgcl.git
+[submodule "lib/vexcl"]
+	path = lib/vexcl
+	url = git@github.com:ddemidov/vexcl.git
