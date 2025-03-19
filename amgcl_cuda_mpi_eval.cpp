@@ -29,15 +29,15 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    amgcl::mpi::init mpi(&argc, &argv);
+    amgcl::mpi::communicator world(MPI_COMM_WORLD);
+
     // Show the name of the GPU we are using:
     int device;
     cudaDeviceProp prop;
     cudaGetDevice(&device);
     cudaGetDeviceProperties(&prop, device);
-    std::cout << prop.name << std::endl;
-
-    amgcl::mpi::init mpi(&argc, &argv);
-    amgcl::mpi::communicator world(MPI_COMM_WORLD);
+    std::cout << "GPU Device " << device << ": " << prop.name << std::endl;
 
     // The profiler:
     amgcl::profiler<> prof("matrix CUDA+MPI");
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     int iters;
     double error;
     thrust::device_vector<double> f(rhs);
-    thrust::device_vector<double> x(rows, 0.0);
+    thrust::device_vector<double> x(chunk, 0.0);
    
     prof.tic("solve");
     std::tie(iters, error) = solve(*A, f, x);
