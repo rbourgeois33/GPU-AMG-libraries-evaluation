@@ -19,15 +19,14 @@ git submodule update --init --recursive
 
 ### NVIDIA A5000 (Petra)
 ```bash
-module load cuda/12.1.0 \
-            cmake/3.18.4 \
-            openmpi/gcc_11.2.0/4.1.4
+module use --append /product/ubuntu22-x86_64/modulefiles/system/
+module load cuda/12.4.0 openmpi/gcc_13.3.0/
 ```
 ### NVIDIA Ada 6000 (Ada)
 ```bash
+module use --append /product/ubuntu22-x86_64/modulefiles/system/
 module load cuda/12.4.0 openmpi/gcc_13.3.0/
 ```
-
 ### NVIDIA A100 (Jean Zay)
 ```bash
 module load cuda/12.4.1 \
