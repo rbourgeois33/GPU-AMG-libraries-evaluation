@@ -6,6 +6,9 @@
 #include <amgcl/make_solver.hpp>
 #include <amgcl/amg.hpp>
 #include <amgcl/coarsening/ruge_stuben.hpp>
+#include <amgcl/coarsening/aggregation.hpp>
+#include <amgcl/mpi/coarsening/pmis.hpp>
+#include <amgcl/coarsening/smoothed_aggregation.hpp>
 #include <amgcl/relaxation/damped_jacobi.hpp>
 #include <amgcl/solver/cg.hpp>
 
@@ -54,8 +57,10 @@ int main(int argc, char *argv[]) {
     typedef amgcl::make_solver<
         amgcl::amg<
             Backend,
-            amgcl::coarsening::ruge_stuben,
- //           amgcl::coarsening::aggregation,
+     //         amgcl::coarsening::ruge_stuben,
+            amgcl::coarsening::aggregation,
+            // amgcl::coarsening::smoothed_aggregation,
+           //  amgcl::coarsening::pmis,
             amgcl::relaxation::damped_jacobi
             >,
         amgcl::solver::cg<Backend>
@@ -79,8 +84,8 @@ int main(int argc, char *argv[]) {
     prm.precond.coarse_enough=2;
     prm.precond.direct_coarse=true;
     prm.precond.ncycle=1;
-    prm.precond.relax.damping = 0.8;
-    prm.precond.coarsening.eps_strong = 0.25;
+    prm.precond.relax.damping = 0.6666;
+    //prm.precond.coarsening.eps_strong = 0.25;
 
     // Initialize the solver with the system matrix:
     prof.tic("setup");

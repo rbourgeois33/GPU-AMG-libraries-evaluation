@@ -5,6 +5,8 @@ project(AMG_EVAL LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
 
 # ---- Ginkgo
 
@@ -67,19 +69,33 @@ target_link_libraries(amgcl_cuda_eval
         CUDA::cusparse
  )
 
+ set_source_files_properties(
+    amgcl_cuda_mpi_eval.cpp
+    PROPERTIES
+        LANGUAGE CUDA
+)
+
+add_executable(amgcl_cuda_mpi_eval amgcl_cuda_mpi_eval.cpp)
+
+target_link_libraries(amgcl_cuda_mpi_eval
+    PRIVATE
+        amgcl::amgcl
+        CUDA::cusparse
+    ${MPI_LIBRARIES}
+        )
 
 # ---- hypre
 
 
 # Specify the correct path to the Hypre library
-set(HYPRE_DIR "${CMAKE_SOURCE_DIR}/lib/hypre/build/install") # Use the 'build' folder where the library is found
+# set(HYPRE_DIR "${CMAKE_SOURCE_DIR}/lib/hypre/build/install") # Use the 'build' folder where the library is found
 
-# Add the executable target for your file
-add_executable(hypre_eval hypre_eval.cpp)
+# # Add the executable target for your file
+# add_executable(hypre_eval hypre_eval.cpp)
 
-# Include the Hypre headers
-target_include_directories(hypre_eval PRIVATE ${HYPRE_DIR}/include)
+# # Include the Hypre headers
+# target_include_directories(hypre_eval PRIVATE ${HYPRE_DIR}/include)
 
-# Link the Hypre library
-target_link_directories(hypre_eval PRIVATE ${HYPRE_DIR}/lib)
-target_link_libraries(hypre_eval PRIVATE ${HYPRE_DIR}/lib/libHYPRE.a) # Static linking
+# # Link the Hypre library
+# target_link_directories(hypre_eval PRIVATE ${HYPRE_DIR}/lib)
+# target_link_libraries(hypre_eval PRIVATE ${HYPRE_DIR}/lib/libHYPRE.a) # Static linking
