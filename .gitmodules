@@ -13,3 +13,6 @@
 [submodule "lib/hypre"]
 	path = lib/hypre
 	url = https://github.com/hypre-space/hypre.git
+[submodule "lib/vexcl"]
+	path = lib/vexcl
+	url = https://github.com/ddemidov/vexcl

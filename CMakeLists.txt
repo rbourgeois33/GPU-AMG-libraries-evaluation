@@ -6,54 +6,59 @@ project(AMG_EVAL LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(MPI REQUIRED)
-include_directories(${MPI_INCLUDE_PATH})
-
-# ---- Ginkgo
-
-# Add the Ginkgo library (adjust the path to the installed Ginkgo)
-set(GINKGO_DIR "${CMAKE_SOURCE_DIR}/lib/ginkgo/build/install")
-
-# Add the Ginkgo library include and library paths
-find_package(Ginkgo REQUIRED HINTS ${GINKGO_DIR})
-
-# Add an executable target for the ginkgo_eval file
-add_executable(ginkgo_eval ginkgo_eval.cpp)
-
-# Include the Ginkgo header files
-target_include_directories(ginkgo_eval PRIVATE ${GINKGO_DIR}/include)
-
-# Include mynvtx header file directory
-target_include_directories(ginkgo_eval PRIVATE ${CMAKE_SOURCE_DIR}/lib/mynvtx)
-
-# Link the Ginkgo library to the executable
-target_link_libraries(ginkgo_eval PRIVATE Ginkgo::ginkgo)
-
-# ---- AMGX
-
-# Point CMake to AMGX headers
-include_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/include")
-
-# Point CMake to AMGX libraries
-link_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/build")
-
-# Create the executable from your source file
-add_executable(AMGX_eval AMGX_eval.cpp)
-
-# Link against the AMGX shared library (AMGXsh).
-# If your library name differs, adjust accordingly (e.g., AMGX, libAMGXsh, etc.).
-target_link_libraries(AMGX_eval amgxsh)
-
-# # ---- amgcl-cuda
+find_package(OpenCL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system)
+include_directories(${MPI_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} amgcl vexcl)
 
 # Tell CMake that we need CUDA language:
 enable_language(CUDA)
-
 find_package(CUDAToolkit REQUIRED)
 
 # E.g. for Volta (sm_70) or Turing (sm_75) or Ampere (sm_80) etc.
 set(CMAKE_CUDA_ARCHITECTURES 70 75 80)  # or just "75", etc.
 
+
+
+# ---- Ginkgo
+
+# # Add the Ginkgo library (adjust the path to the installed Ginkgo)
+# set(GINKGO_DIR "${CMAKE_SOURCE_DIR}/lib/ginkgo/build/install")
+
+# # Add the Ginkgo library include and library paths
+# find_package(Ginkgo REQUIRED HINTS ${GINKGO_DIR})
+
+# # Add an executable target for the ginkgo_eval file
+# add_executable(ginkgo_eval ginkgo_eval.cpp)
+
+# # Include the Ginkgo header files
+# target_include_directories(ginkgo_eval PRIVATE ${GINKGO_DIR}/include)
+
+# # Include mynvtx header file directory
+# target_include_directories(ginkgo_eval PRIVATE ${CMAKE_SOURCE_DIR}/lib/mynvtx)
+
+# # Link the Ginkgo library to the executable
+# target_link_libraries(ginkgo_eval PRIVATE Ginkgo::ginkgo)
+
+# # ---- AMGX
+
+# # Point CMake to AMGX headers
+# include_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/include")
+
+# # Point CMake to AMGX libraries
+# link_directories("${CMAKE_SOURCE_DIR}/lib/AMGX/build")
+
+# # Create the executable from your source file
+# add_executable(AMGX_eval AMGX_eval.cpp)
+
+# # Link against the AMGX shared library (AMGXsh).
+# # If your library name differs, adjust accordingly (e.g., AMGX, libAMGXsh, etc.).
+# target_link_libraries(AMGX_eval amgxsh)
+
+# # ---- amgcl-cuda
+
+
 add_subdirectory(lib/amgcl)
+add_subdirectory(lib/vexcl)
 
 set_source_files_properties(
     amgcl_cuda_eval.cpp
@@ -83,6 +88,10 @@ target_link_libraries(amgcl_cuda_mpi_eval
         CUDA::cusparse
     ${MPI_LIBRARIES}
         )
+
+add_executable(amgcl_vexcl_mpi_eval amgcl_vexcl_mpi_eval.cpp)
+target_link_libraries(amgcl_vexcl_mpi_eval ${MPI_LIBRARIES} amgcl::amgcl OpenCL Boost::filesystem Boost::system)
+
 
 # ---- hypre
 

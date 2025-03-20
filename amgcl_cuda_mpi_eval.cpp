@@ -128,8 +128,8 @@ int main(int argc, char *argv[]) {
     prm.precond.npre=1;
     prm.precond.npost=1;
     prm.precond.max_levels=100;
-    prm.precond.coarse_enough=2;
-    prm.precond.direct_coarse=true;
+    // prm.precond.coarse_enough=2;
+    // prm.precond.direct_coarse=true;
     prm.precond.ncycle=1;
 
     // Initialize the solver:
